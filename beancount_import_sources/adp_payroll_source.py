@@ -153,29 +153,30 @@ class AdpPayrollSource(Config, Source):
                         price=None,
                         flag=None))
 
-            for memo in data['payStatement']['memos']:
-                if memo['nameCode']['codeValue'] not in self.memo_map: continue
-                memo_income_account, memo_expense_account = \
-                    self.memo_map[memo['nameCode']['codeValue']]
-                if 'memoAmount' not in memo: continue
-                amount = self.to_amount(memo['memoAmount'])
-                memo_description = memo['nameCode']['shortName'].strip()
-                txn.postings.append(
-                    Posting(
-                        account=memo_income_account,
-                        units=-amount,
-                        cost=None,
-                        meta={'adp_payroll_posting_description': memo_description},
-                        price=None,
-                        flag=None))
-                txn.postings.append(
-                    Posting(
-                        account=memo_expense_account,
-                        units=amount,
-                        cost=None,
-                        meta={'adp_payroll_posting_description': memo_description},
-                        price=None,
-                        flag=None))
+            if 'memos' in data['payStatement']:
+                for memo in data['payStatement']['memos']:
+                    if memo['nameCode']['codeValue'] not in self.memo_map: continue
+                    memo_income_account, memo_expense_account = \
+                        self.memo_map[memo['nameCode']['codeValue']]
+                    if 'memoAmount' not in memo: continue
+                    amount = self.to_amount(memo['memoAmount'])
+                    memo_description = memo['nameCode']['shortName'].strip()
+                    txn.postings.append(
+                        Posting(
+                            account=memo_income_account,
+                            units=-amount,
+                            cost=None,
+                            meta={'adp_payroll_posting_description': memo_description},
+                            price=None,
+                            flag=None))
+                    txn.postings.append(
+                        Posting(
+                            account=memo_expense_account,
+                            units=amount,
+                            cost=None,
+                            meta={'adp_payroll_posting_description': memo_description},
+                            price=None,
+                            flag=None))
 
             if len(txn.postings) > 0:
                 imported_transactions_by_file.setdefault(relative_filename, []).append(txn)
